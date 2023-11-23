@@ -9,32 +9,38 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          ref: dummy-data    #checkout different branch
+          ref: main  # Replace 'main' with the branch where you want this workflow to run
 
       - name: Generate Directory Listings
-        uses: jayanta525/github-pages-directory-listing@v3.0.0
+        uses: jayanta525/github-pages-directory-listing@v4.0.0
         with:
-          FOLDER: data      #directory to generate index
+          FOLDER: ./  # Set FOLDER to root (./ indicates the root directory)
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
-          path: 'data'      # upload generated folder
-  
+          name: directory-listing  # Give a name to the artifact
+          path: ./  # Upload the root directory as an artifact
+
   deploy:
     needs: pages-directory-listing
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write
+      id-token: write
 
-    # Deploy to the github-pages environment
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # URL for the deployment, it will be automatically filled by the workflow
 
-    # Specify runner + deployment step
     runs-on: ubuntu-latest
     steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: directory-listing  # Match the artifact name from the previous step
+
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./  # Publish the root directory to GitHub Pages
